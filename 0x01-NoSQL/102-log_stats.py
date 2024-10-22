@@ -16,18 +16,24 @@ def print_nginx_request_logs(nginx_collection):
         nginx_collection.find({'method': 'GET', 'path': '/status'})
     ))
     print('{} status check'.format(status_checks_count))
+
+
+def print_ips(nginx_collection):
+    '''Prints Nginx request logs top ips.
+    '''
     print('IPs:')
-    total_ips = nginx_collection.aggregate([
-        {
-            "$group": {
-                "_id": "$ip", "total": {"$count": {}}
+    total_ips = nginx_collection.aggregate(
+        [
+            {
+                "$group": {"_id": "$ip", "total": {"$sum": 1}}
+            },
+            {
+                "$sort": {"total": -1}
+            },
+            {
+                "$limit": 10
             }
-        },
-        {
-            "$sort": {"total": -1}
-        },
-        {"$limit": 10}
-    ])
+        ])
     for ip in total_ips:
         print('\t{}: {}'.format(ip['_id'], ip['total']))
 
@@ -37,6 +43,7 @@ def run():
     '''
     client = MongoClient('mongodb://127.0.0.1:27017')
     print_nginx_request_logs(client.logs.nginx)
+    print_ips(client.logs.nginx)
 
 
 if __name__ == '__main__':
