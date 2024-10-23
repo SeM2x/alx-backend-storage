@@ -25,12 +25,12 @@ def count_calls(method: Callable) -> Callable:
         res_key = f"result:{url}"
         expiration_time = 10
         redis_instance.incr(count_key)
-        if redis_instance.exists(res_key):
-            return redis_instance.get(res_key).decode('utf-8')
+        res = redis_instance.get(res_key)
+        if res:
+            return res.decode('utf-8')
         res = method(url)
         redis_instance.set(count_key, 0)
-        redis_instance.set(res_key, res)
-        redis_instance.expire(res_key, expiration_time)
+        redis_instance.setex(res_key, expiration_time, res)
         return res
     return inc
 
