@@ -4,16 +4,18 @@ This module provides a Cache class for storing data in a Redis database.
 """
 import redis
 import uuid
-from typing import Self, Callable
+from typing import Callable
 from functools import wraps
 
 
 def count_calls(method: Callable) -> Callable:
-    """"""
+    """
+    Decorator that counts the number of calls to a method using Redis.
+    """
     key = method.__qualname__
 
     @wraps(method)
-    def inc(self, data):
+    def inc(self, data: str | bytes | int | float) -> Callable:
         self._redis.incr(key)
         return method
     return inc
@@ -24,15 +26,15 @@ class Cache:
     Cache class for storing data in Redis with unique keys.
     """
 
-    def __init__(self: Self):
+    def __init__(self):
         """
         Initializes a new Redis client and flushes the database.
         """
         self._redis = redis.Redis()
-        self._redis.flushdb()
+        self._redis.flushdb(True)
 
     @count_calls
-    def store(self: Self, data: str) -> bool:
+    def store(self, data: str | bytes | int | float) -> str:
         """
         Stores the given data in Redis with a unique key.
         """
@@ -40,7 +42,7 @@ class Cache:
         self._redis.set(key, data)
         return key
 
-    def get(self: Self, key: str, fn: Callable = None) -> bytes | str | int:
+    def get(self, key: str, fn: Callable = None) -> bytes | str | int | float:
         """
         Retrieves data from Redis and applies an optional transformation function.
         """
@@ -49,14 +51,14 @@ class Cache:
             return fn(data)
         return data
 
-    def get_str(self: Self, key: str) -> str:
+    def get_str(self, key: str) -> str:
         """
         Retrieve a string value from Redis by key.
         """
-        return self.get(key, str)
+        return self.get(key, lambda x: x.decode('utf-8'))
 
-    def get_int(self: Self, key: str) -> int:
+    def get_int(self, key: str) -> int:
         """
         Retrieve an integer value from Redis by key.
         """
-        return self.get(key, int)
+        return self.get(key, lambda x: int(x))
