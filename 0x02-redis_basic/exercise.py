@@ -96,9 +96,7 @@ class Cache:
         transformation function.
         """
         data = self._redis.get(key)
-        if fn is not None:
-            return fn(data)
-        return data
+        return fn(data) if fn is not None else data
 
     def get_str(self, key: str) -> str:
         """
