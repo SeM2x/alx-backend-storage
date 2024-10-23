@@ -19,7 +19,8 @@ def count_calls(method: Callable) -> Callable:
         """
         Increments the value of a Redis key and then calls the given method.
         """
-        self._redis.incr(key)
+        if isinstance(self._redis, redis.Redis):
+            self._redis.incr(key)
         return method(self, *args, **kwargs)
     return inc
 
