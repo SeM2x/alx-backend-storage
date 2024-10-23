@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""
-This module provides a decorator to count method calls
-using Redis and a function to fetch web page content.
-"""
-import requests
+'''A module with tools for request caching and tracking.
+'''
 import redis
-from typing import Callable
+import requests
 from functools import wraps
+from typing import Callable
 
 
-redis_instance = redis.Redis()
+redis_store = redis.Redis()
+'''The module-level Redis instance.
+'''
 
 
 def data_cacher(method: Callable) -> Callable:
@@ -19,21 +19,20 @@ def data_cacher(method: Callable) -> Callable:
     def invoker(url) -> str:
         '''The wrapper function for caching the output.
         '''
-        redis_instance.incr(f'count:{url}')
-        result = redis_instance.get(f'result:{url}')
+        redis_store.incr(f'count:{url}')
+        result = redis_store.get(f'result:{url}')
         if result:
             return result.decode('utf-8')
         result = method(url)
-        redis_instance.set(f'count:{url}', 0)
-        redis_instance.setex(f'result:{url}', 10, result)
+        redis_store.set(f'count:{url}', 0)
+        redis_store.setex(f'result:{url}', 10, result)
         return result
     return invoker
 
 
 @data_cacher
 def get_page(url: str) -> str:
-    """
-    Fetches the content of the given URL and returns it as a string.
-    """
-    response = requests.get(url)
-    return response.text
+    '''Returns the content of a URL after caching the request's response,
+    and tracking the request.
+    '''
+    return requests.get(url).text
