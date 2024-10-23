@@ -19,10 +19,28 @@ def count_calls(method: Callable) -> Callable:
         """
         Increments the value of a Redis key and then calls the given method.
         """
-        if isinstance(self._redis, redis.Redis):
-            self._redis.incr(key)
+        self._redis.incr(key)
         return method(self, *args, **kwargs)
     return inc
+
+
+def call_history(method: Callable) -> Callable:
+    """
+    Decorator to store the history of inputs and outputs for a method in Redis.
+    """
+    inputs_key = method.__qualname__ + ":inputs"
+    outputs_key = method.__qualname__ + ":outputs"
+
+    @wraps(method)
+    def history(self, *args, **kwargs):
+        """
+        Store the input arguments and output of a method call in Redis.
+        """
+        self._redis.rpush(inputs_key, str(args))
+        output = method(self, *args, **kwargs)
+        self._redis.rpush(outputs_key, str(output))
+        return output
+    return history
 
 
 class Cache:
@@ -37,6 +55,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb(True)
 
+    @call_history
     @count_calls
     def store(self, data: Union[bytes, str, int, float]) -> str:
         """
