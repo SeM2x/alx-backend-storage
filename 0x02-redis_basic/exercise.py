@@ -4,7 +4,7 @@ This module provides a Cache class for storing data in a Redis database.
 """
 import redis
 import uuid
-from typing import Callable
+from typing import Callable, Any
 from functools import wraps
 
 
@@ -15,9 +15,9 @@ def count_calls(method: Callable) -> Callable:
     key = method.__qualname__
 
     @wraps(method)
-    def inc(self, data: str | bytes | int | float) -> Callable:
+    def inc(self, *args, **kwargs) -> Any:
         self._redis.incr(key)
-        return method
+        return method(self, *args, **kwargs)
     return inc
 
 
