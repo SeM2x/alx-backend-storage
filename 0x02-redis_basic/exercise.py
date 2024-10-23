@@ -43,6 +43,27 @@ def call_history(method: Callable) -> Callable:
     return history
 
 
+def replay(method: Callable) -> None:
+    """
+    Replays the history of calls to the given method,
+    showing inputs and outputs.
+    """
+    key = method.__qualname__
+    inputs_key = key + ":inputs"
+    outputs_key = key + ":outputs"
+
+    count = 0
+    if redis.Redis().exists(key):
+        count = int(redis.Redis().get(key))
+    print(f'{key} was called {count} times:')
+    inputs = redis.Redis().lrange(inputs_key, 0, -1)
+    outputs = redis.Redis().lrange(outputs_key, 0, -1)
+    for item in list(zip(inputs, outputs)):
+        input = item[0].decode("utf-8")
+        output = item[1].decode("utf-8")
+        print(f'{key}(*{input}) -> {output}')
+
+
 class Cache:
     """
     Cache class for storing data in Redis with unique keys.
