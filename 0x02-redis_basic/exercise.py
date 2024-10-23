@@ -78,7 +78,7 @@ class Cache:
 
     @call_history
     @count_calls
-    def store(self, data: Union[bytes, str, int, float]) -> str:
+    def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         Stores the given data in Redis with a unique key.
         """
@@ -90,13 +90,15 @@ class Cache:
         self,
         key: str,
         fn: Callable = None
-    ) -> Union[bytes, str, int, float]:
+    ) -> Union[str, bytes, int, float]:
         """
         Retrieves data from Redis and applies an optional
         transformation function.
         """
         data = self._redis.get(key)
-        return fn(data) if fn is not None else data
+        if fn is not None:
+            return fn(data)
+        return data
 
     def get_str(self, key: str) -> str:
         """
