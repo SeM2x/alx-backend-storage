@@ -69,7 +69,7 @@ class Cache:
     Cache class for storing data in Redis with unique keys.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes a new Redis client and flushes the database.
         """
