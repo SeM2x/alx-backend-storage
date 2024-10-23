@@ -4,7 +4,7 @@ This module provides a Cache class for storing data in a Redis database.
 """
 import redis
 import uuid
-from typing import Callable, Any
+from typing import Callable, Any, Union
 from functools import wraps
 
 
@@ -34,7 +34,7 @@ class Cache:
         self._redis.flushdb(True)
 
     @count_calls
-    def store(self, data: str | bytes | int | float) -> str:
+    def store(self, data: Union[bytes, str, int, float]) -> str:
         """
         Stores the given data in Redis with a unique key.
         """
@@ -42,7 +42,7 @@ class Cache:
         self._redis.set(key, data)
         return key
 
-    def get(self, key: str, fn: Callable = None) -> bytes | str | int | float:
+    def get(self, key: str, fn: Callable = None) -> Union[bytes, str, int, float]:
         """
         Retrieves data from Redis and applies an optional transformation function.
         """
