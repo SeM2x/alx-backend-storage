@@ -16,6 +16,9 @@ def count_calls(method: Callable) -> Callable:
 
     @wraps(method)
     def inc(self, *args, **kwargs) -> Any:
+        """
+        Increments the value of a Redis key and then calls the given method.
+        """
         self._redis.incr(key)
         return method(self, *args, **kwargs)
     return inc
@@ -42,9 +45,14 @@ class Cache:
         self._redis.set(key, data)
         return key
 
-    def get(self, key: str, fn: Callable = None) -> Union[bytes, str, int, float]:
+    def get(
+        self,
+        key: str,
+            fn: Callable = None
+    ) -> Union[bytes, str, int, float]:
         """
-        Retrieves data from Redis and applies an optional transformation function.
+        Retrieves data from Redis and applies an optional
+        transformation function.
         """
         data = self._redis.get(key)
         if fn:
